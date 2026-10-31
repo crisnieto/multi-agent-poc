@@ -1,0 +1,215 @@
+openapi: 3.1.0
+info:
+  title: Substrate PoC Control Plane
+  version: 0.1.0
+  description: API privada de chat y observabilidad. SSE solo transmite del servidor al navegador.
+servers:
+  - url: http://localhost:8080/api
+security:
+  - cookieAuth: []
+paths:
+  /auth/login:
+    post:
+      security: []
+      summary: Iniciar sesión de operador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        '204': { description: Cookie HttpOnly establecida }
+        '401': { description: Credenciales inválidas }
+  /sessions:
+    get:
+      summary: Listar sesiones
+      responses:
+        '200':
+          description: Sesiones de la ventana actual
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Session' }
+    post:
+      summary: Crear sesión y actor de Substrate
+      responses:
+        '201':
+          description: Sesión creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '503': { description: Substrate no disponible }
+  /sessions/{sessionId}:
+    parameters:
+      - $ref: '#/components/parameters/sessionId'
+    get:
+      summary: Consultar sesión
+      responses:
+        '200':
+          description: Sesión y estado actual
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '404': { description: Sesión inexistente }
+    delete:
+      summary: Cerrar sesión y eliminar actor
+      responses:
+        '204': { description: Sesión cerrada }
+        '404': { description: Sesión inexistente }
+  /sessions/{sessionId}/requests:
+    parameters:
+      - $ref: '#/components/parameters/sessionId'
+    post:
+      summary: Iniciar un turno; el resultado se observa por SSE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 16000 }
+                idempotency_key: { type: string, maxLength: 128 }
+      responses:
+        '202':
+          description: Solicitud aceptada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatRequest' }
+        '404': { description: Sesión inexistente }
+        '409': { description: Ya existe un turno activo en la sesión }
+  /requests/{requestId}:
+    parameters:
+      - $ref: '#/components/parameters/requestId'
+    get:
+      summary: Consultar resultado tras reconexión
+      responses:
+        '200':
+          description: Estado de solicitud
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatRequest' }
+        '404': { description: Solicitud inexistente }
+  /requests/{requestId}/events:
+    parameters:
+      - $ref: '#/components/parameters/requestId'
+    get:
+      summary: Eventos SSE de una solicitud
+      description: |
+        Usa Last-Event-ID para reproducir eventos posteriores. Cada evento tiene id entero,
+        event (queued, started, delta, completed, failed, capacity.waiting) y data JSON.
+        completed y failed son terminales y mutuamente excluyentes.
+      parameters:
+        - in: header
+          name: Last-Event-ID
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: Flujo de eventos
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '404': { description: Solicitud inexistente }
+  /topology:
+    get:
+      summary: Estado observado de actores y workers
+      responses:
+        '200':
+          description: Snapshot de topología
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Topology' }
+  /topology/events:
+    get:
+      summary: Eventos SSE de asignación y ciclo de vida
+      description: Soporta Last-Event-ID; los eventos incluyen source y observed_at.
+      parameters:
+        - in: header
+          name: Last-Event-ID
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: Flujo de eventos
+          content:
+            text/event-stream:
+              schema: { type: string }
+  /healthz:
+    get:
+      security: []
+      summary: Salud de la API
+      responses:
+        '200': { description: Lista }
+        '503': { description: Dependencia no disponible }
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: poc_session
+  parameters:
+    sessionId:
+      in: path
+      name: sessionId
+      required: true
+      schema: { type: string, format: uuid }
+    requestId:
+      in: path
+      name: requestId
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Session:
+      type: object
+      required: [id, actor_id, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        actor_id: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [creating, ready, busy, suspended, failed, closed] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ChatRequest:
+      type: object
+      required: [id, session_id, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        status: { type: string, enum: [queued, running, completed, failed, timed_out, cancelled] }
+        created_at: { type: string, format: date-time }
+        final_text: { type: string }
+        error_code: { type: string }
+    Actor:
+      type: object
+      required: [actor_id, session_id, state, observed_at]
+      properties:
+        actor_id: { type: string }
+        session_id: { type: string, format: uuid }
+        state: { type: string, enum: [suspended, resuming, running, suspending, crashed, unknown] }
+        worker_id: { type: string }
+        observed_at: { type: string, format: date-time }
+    Worker:
+      type: object
+      required: [worker_id, pod_name, state, observed_at]
+      properties:
+        worker_id: { type: string }
+        pod_name: { type: string }
+        state: { type: string, enum: [idle, busy, unavailable] }
+        actor_id: { type: string }
+        observed_at: { type: string, format: date-time }
+    Topology:
+      type: object
+      required: [observed_at, actors, workers]
+      properties:
+        observed_at: { type: string, format: date-time }
+        actors:
+          type: array
+          items: { $ref: '#/components/schemas/Actor' }
+        workers:
+          type: array
+          items: { $ref: '#/components/schemas/Worker' }
