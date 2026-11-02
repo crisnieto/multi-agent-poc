@@ -4,5 +4,5 @@ import { LocalDemo } from './pages/LocalDemo';
 import { Dashboard } from './pages/Dashboard';
 import './style.css';
 
-const real = new URLSearchParams(window.location.search).get('mode') === 'real';
-createRoot(document.getElementById('root')!).render(<React.StrictMode>{real ? <Dashboard /> : <LocalDemo />}</React.StrictMode>);
+const demo = new URLSearchParams(window.location.search).get('mode') === 'demo';
+createRoot(document.getElementById('root')!).render(<React.StrictMode>{demo ? <LocalDemo /> : <Dashboard />}</React.StrictMode>);

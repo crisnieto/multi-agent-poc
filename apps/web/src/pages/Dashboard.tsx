@@ -91,13 +91,13 @@ export function Dashboard() {
     } catch (cause) { setBusy(null); setError(String(cause)); }
   }
 
-  if (!loggedIn) return <main><header><div><small>AGENT SUBSTRATE / POC LOCAL</small><h1>Chat y multiplexación</h1></div><span className="badge">SUBSTRATE REAL</span></header>
+  if (!loggedIn) return <main><header><div><small>AGENT SUBSTRATE / POC</small><h1>Chat y multiplexación</h1></div><span className="badge">SUBSTRATE REAL</span></header>
     <section className="panel login-panel"><h2>Ingresar como operador</h2><form onSubmit={signIn}>
       <input type="password" aria-label="Contraseña" value={password} onChange={(event) => setPassword(event.target.value)} />
       <button>Ingresar</button></form>{error && <p role="alert">{error}</p>}</section></main>;
 
   const current = sessions.find((session) => session.id === selected);
-  return <main><header><div><small>AGENT SUBSTRATE / POC LOCAL</small><h1>Chat y multiplexación</h1></div><span className="badge">SUBSTRATE REAL</span></header>
+  return <main><header><div><small>AGENT SUBSTRATE / POC</small><h1>Chat y multiplexación</h1></div><span className="badge">SUBSTRATE REAL</span></header>
     {error && <p role="alert" className="error">{error}</p>}
     <div className="dashboard-layout">
       <aside className="panel session-list"><h2>Sesiones</h2><button onClick={() => void addSession()}>Nuevo chat</button>
