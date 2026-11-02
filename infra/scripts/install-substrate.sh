@@ -37,11 +37,13 @@ worktree="$root/infra/.cache/substrate-eks"
 (cd "$worktree" && go run ./cmd/ate-setup deploy ate-system \
   --no-dev-env \
   --sandbox-classes=gvisor \
-  --snapshot-location="s3://$bucket/atespaces/" \
+  --snapshot-location="s3://$bucket/" \
   --ateapi-postgres-storage-class=substrate-poc-gp3 \
   --credential-provider='{"name":"k8s.io"}' \
-  --ingress-allowed-spiffe-ids='spiffe://cluster.local/ns/ate-system/sa/atenet-client,spiffe://cluster.local/ns/poc/sa/control-plane' \
+  --ingress-allowed-spiffe-ids='spiffe://cluster.local/ns/ate-system/sa/atenet-client' \
   --rollout-timeout=10m)
 kubectl -n ate-system rollout status deployment/ate-api-server --timeout=10m
+"$root/infra/scripts/check-pod-certificates.sh"
+(cd "$worktree" && go build -o "$root/infra/.cache/kubectl-ate" ./cmd/kubectl-ate)
 kubectl -n ate-system get pods
 printf 'Substrate instalado desde %s en %s\n' "$(sed -n 's/^commit=//p' "$root/infra/substrate.lock")" "$cluster"

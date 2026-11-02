@@ -1,6 +1,10 @@
 .git
 .env*
 *.env
+auth.json
+*.credentials.json
+*.secret.yaml
+*.secret.yml
 node_modules
 dist
 coverage
@@ -9,5 +13,8 @@ coverage
 *.sqlite*
 *.tfstate*
 *.tfvars
+.terraform
+infra/.cache
+infra/.runtime
 infra/config/secrets
 infra/local/secrets

@@ -12,6 +12,7 @@ Thumbs.db
 .idea/
 infra/.cache/
 infra/.runtime/
+apps/control-plane/assets/kubectl-ate
 infra/reports/*.runtime.md
 .pnpm-store/
 .vite/

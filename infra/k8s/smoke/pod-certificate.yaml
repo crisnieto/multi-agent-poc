@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: poc-pod-certificate-smoke
+  namespace: ate-system
+spec:
+  restartPolicy: Never
+  containers:
+  - name: check
+    image: busybox:1.37
+    command: ["sh", "-c", "test -s /run/podcert/credential-bundle.pem && sleep 600"]
+    readinessProbe:
+      exec:
+        command: ["sh", "-c", "test -s /run/podcert/credential-bundle.pem"]
+      periodSeconds: 2
+    volumeMounts:
+    - name: identity
+      mountPath: /run/podcert
+      readOnly: true
+  volumes:
+  - name: identity
+    projected:
+      sources:
+      - podCertificate:
+          signerName: podidentity.podcert.ate.dev/identity
+          keyType: ECDSAP256
+          credentialBundlePath: credential-bundle.pem
