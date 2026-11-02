@@ -1,0 +1,20 @@
+apiVersion: ate.dev/v1
+kind: WorkerPool
+metadata:
+  name: codex-poc
+  namespace: ate-demo-counter
+  labels:
+    workload: codex-poc
+spec:
+  replicas: 2
+  workerImage: __WORKER_IMAGE__
+  sandboxClasses:
+  - name: gvisor
+  template:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi

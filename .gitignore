@@ -1,0 +1,43 @@
+# Dependencias y artefactos locales
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+infra/.cache/
+infra/.runtime/
+infra/reports/*.runtime.md
+.pnpm-store/
+.vite/
+*.sqlite
+*.sqlite-*
+
+# Variables y credenciales locales
+.env
+.env.*
+*.env
+!.env.example
+!.env.*.example
+!*.env.example
+infra/config/secrets/
+infra/local/secrets/
+*.credentials.json
+auth.json
+*.secret.yaml
+*.secret.yml
+
+# Estado de infraestructura
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Configuración de autenticación local de Codex
+.codex/

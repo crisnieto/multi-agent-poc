@@ -1,0 +1,13 @@
+.git
+.env*
+*.env
+node_modules
+dist
+coverage
+*.log
+.codex
+*.sqlite*
+*.tfstate*
+*.tfvars
+infra/config/secrets
+infra/local/secrets

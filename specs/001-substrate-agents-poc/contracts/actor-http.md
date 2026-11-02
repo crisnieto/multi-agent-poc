@@ -27,7 +27,7 @@ En falla emite `event: failed` con `code` y `message` no sensibles. `completed` 
 
 ## Persistencia y egreso
 
-El adaptador conserva el identificador de hilo y datos necesarios para `thread/resume` dentro del filesystem del actor que entra en el snapshot. El gateway de egreso de Substrate permite únicamente destinos OpenAI y MCP aprobados e inyecta credenciales fuera del actor. Si la prueba muestra que Codex requiere una clave real dentro del sandbox, el gate falla y se documenta antes de continuar.
+El adaptador conserva el identificador de hilo y datos necesarios para `thread/resume` dentro del filesystem del actor que entra en el snapshot. En kind y EKS, el gateway de egreso de Substrate permite únicamente destinos OpenAI y MCP aprobados e inyecta credenciales fuera del actor. El arranque standalone local puede recibir una clave solo como variable de proceso para su smoke test; esa clave no entra en archivos, imágenes, logs, commits ni pushes. Si la integración con Substrate muestra que Codex requiere una clave real dentro del sandbox, el gate falla y se documenta antes de continuar.
 
 ## Validaciones de integración
 

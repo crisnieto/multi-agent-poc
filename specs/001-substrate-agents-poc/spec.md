@@ -42,17 +42,19 @@ Como usuario de la PoC, quiero abrir chats independientes y recibir la respuesta
 
 ### User Story 3 - Desplegar y apagar la PoC (Priority: P3)
 
-Como operador, quiero levantar, verificar, apagar y volver a levantar todos los componentes en EKS mediante un procedimiento único y documentado, para realizar pruebas por ventanas y controlar el gasto.
+Como operador, quiero levantar cada componente por separado en mi equipo, integrarlos localmente y solo después levantar, verificar, apagar y volver a levantar el conjunto en EKS mediante un procedimiento documentado. Así puedo detectar fallas sin consumir infraestructura AWS durante el desarrollo inicial.
 
 **Why this priority**: El presupuesto impide mantener el entorno aprovisionado de forma continua.
 
-**Independent Test**: Desde una cuenta preparada, ejecutar la guía de despliegue, verificar salud y una conversación; apagar, comprobar ausencia de recursos facturables previstos y volver a crear el entorno.
+**Independent Test**: Arrancar y verificar localmente frontend, API de chat, actor Codex y Substrate por separado; completar una conversación y una asignación en la integración local; luego repetir el despliegue, apagado y recreación en EKS desde una cuenta preparada.
 
 **Acceptance Scenarios**:
 
-1. **Given** los prerrequisitos y credenciales definidos, **When** el operador sigue la guía, **Then** obtiene un entorno funcional con interfaz, servicio de chat, agente y Substrate, o un diagnóstico explícito de incompatibilidad verificable.
-2. **Given** el entorno en funcionamiento, **When** el operador ejecuta el procedimiento de apagado, **Then** se eliminan los recursos de cómputo y el clúster, se enumeran los recursos persistentes y se informa su costo residual estimado.
-3. **Given** el entorno apagado, **When** el operador lo vuelve a levantar, **Then** se recrean los componentes y se puede repetir la demostración sin pasos manuales no documentados.
+1. **Given** una máquina de desarrollo preparada, **When** el operador sigue la guía local, **Then** puede iniciar y verificar cada uno de los cuatro componentes por separado en su capacidad mínima, sin crear recursos AWS.
+2. **Given** los cuatro componentes verificados por separado, **When** el operador ejecuta la integración local, **Then** una sesión completa un turno y muestra el actor y worker reales de Substrate local.
+3. **Given** el gate local aprobado y los prerrequisitos de AWS, **When** el operador sigue la guía EKS, **Then** obtiene un entorno funcional con los mismos componentes o un diagnóstico explícito de incompatibilidad verificable.
+4. **Given** el entorno EKS en funcionamiento, **When** el operador ejecuta el procedimiento de apagado, **Then** se eliminan los recursos de cómputo y el clúster, se enumeran los recursos persistentes y se informa su costo residual estimado.
+5. **Given** el entorno EKS apagado, **When** el operador lo vuelve a levantar, **Then** se recrean los componentes y se puede repetir la demostración sin pasos manuales no documentados.
 
 ---
 
@@ -76,6 +78,7 @@ Como responsable del presupuesto, quiero conocer el costo estimado antes de ence
 - Si se solicita suspensión mientras hay una respuesta activa, el sistema evita cortar la respuesta y deja constancia de cuándo se libera el worker.
 - Si una sesión se elimina o expira, se libera su actor y se define el destino de su estado y costos de almacenamiento.
 - Si Substrate no puede instalarse o funcionar en la versión elegida de EKS, el procedimiento detiene el despliegue con evidencia y sin dejar recursos facturables innecesarios.
+- Si falta un prerrequisito local o un componente no arranca, el gate local indica cuál falló y no habilita el despliegue AWS.
 - Si el apagado es parcial, el inventario identifica clúster, nodos, balanceadores, discos, direcciones, almacenamiento y registros que sigan generando cargos.
 
 ## Requirements *(mandatory)*
@@ -92,7 +95,7 @@ Como responsable del presupuesto, quiero conocer el costo estimado antes de ence
 - **FR-008**: El sistema MUST permitir demostrar con al menos tres sesiones y menos workers que sesiones la reutilización de un worker por diferentes actores en momentos distintos.
 - **FR-009**: El sistema MUST permitir configurar el tamaño del pool y la política de inactividad para observar la multiplexación en pruebas repetibles.
 - **FR-010**: El sistema MUST informar al usuario cuando una solicitud espera capacidad y MUST aplicar un límite de espera configurable con resultado explícito.
-- **FR-011**: El sistema MUST autenticar el acceso de operador a la PoC y MUST proteger las credenciales del proveedor y de las herramientas, evitando exponerlas en la interfaz, eventos o actor cuando el mecanismo de Substrate lo permita.
+- **FR-011**: El sistema MUST autenticar el acceso de operador a la PoC y MUST proteger las credenciales del proveedor y de las herramientas. La clave OpenAI MUST quedar fuera del repositorio, commits, pushes, imágenes, manifiestos versionados, interfaz y eventos; dentro de Substrate MUST inyectarse fuera del actor cuando el mecanismo lo permita.
 - **FR-012**: El proyecto MUST incluir un procedimiento reproducible para preparar AWS EKS, instalar y configurar Substrate, publicar y desplegar los otros tres componentes, verificar salud y ejecutar la demostración de extremo a extremo.
 - **FR-013**: El procedimiento MUST verificar previamente los requisitos de compatibilidad de la versión fijada de Substrate con EKS, incluidos los servicios de identidad, almacenamiento de estado y capacidades de clúster necesarios; MUST registrar cualquier adaptación o limitación.
 - **FR-014**: El proyecto MUST incluir procedimientos reproducibles de apagado y reencendido que identifiquen dependencias, recursos persistentes, pérdida esperada de datos y cargos residuales.
@@ -100,6 +103,7 @@ Como responsable del presupuesto, quiero conocer el costo estimado antes de ence
 - **FR-016**: El proyecto MUST incluir umbrales de aviso de gasto, una duración máxima recomendada por ventana de prueba y un método para comprobar el gasto real y los recursos remanentes antes de repetirla.
 - **FR-017**: El sistema MUST registrar errores de creación, enrutamiento, suspensión y reanudación de actores con identificadores correlacionables a la sesión y la solicitud, sin registrar secretos ni contenido sensible por defecto.
 - **FR-018**: La documentación MUST describir explícitamente qué estado de sesiones se conserva al apagar el entorno y cómo se limpia al cerrar la prueba.
+- **FR-019**: Antes de cualquier despliegue en AWS, el proyecto MUST permitir iniciar y verificar de forma independiente, en un entorno local sin recursos AWS, el frontend, el servicio de chat, el actor Codex y la gestión de Substrate; MUST proporcionar una prueba local integrada de chat, asignación y suspensión/reanudación que registre el resultado de cada componente.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -120,6 +124,7 @@ Como responsable del presupuesto, quiero conocer el costo estimado antes de ence
 - **SC-004**: Un operador puede levantar y verificar el entorno siguiendo la guía en menos de 90 minutos después de cumplir los prerrequisitos; puede apagarlo y comprobar los recursos remanentes en menos de 20 minutos.
 - **SC-005**: La guía permite planificar ventanas de prueba cuyo costo mensual total estimado no supera USD 80 para las condiciones declaradas; el gasto real se compara con ese límite al terminar cada ventana.
 - **SC-006**: En una revisión guiada, el operador puede explicar el recorrido de una solicitud y localizar la sesión, el actor y el worker que la atendieron en menos de 2 minutos.
+- **SC-007**: Los cuatro componentes superan sus verificaciones locales individuales y una conversación integrada completa un ciclo de asignación, suspensión y reanudación antes de la primera creación de recursos AWS.
 
 ## Assumptions
 
@@ -131,3 +136,4 @@ Como responsable del presupuesto, quiero conocer el costo estimado antes de ence
 - El alcance inicial incluye una configuración acotada de herramientas MCP, sin exigir una lista concreta de servidores ni permisos de terceros.
 - El intercambio de mensajes del usuario usa solicitudes hacia el servicio de chat y entrega incremental de eventos hacia la interfaz; el detalle de transporte se define en el plan.
 - La versión de Substrate se fijará para la PoC porque el proyecto aún puede cambiar sus interfaces y requisitos.
+- La ruta local usará un clúster Kubernetes de desarrollo compatible con la versión fijada de Substrate; los componentes propios podrán arrancar también por separado con dobles de prueba para sus dependencias. La prueba integrada local usará Substrate real.

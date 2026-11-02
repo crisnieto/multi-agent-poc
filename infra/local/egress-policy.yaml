@@ -1,0 +1,10 @@
+rules:
+- https:
+    hostnames: ["api.openai.com"]
+    ports:
+      numbers: [443]
+    effects:
+      replaceHeaders:
+      - header: Authorization
+        prefix: "Bearer "
+        credentialUri: ate-secret://k8s.io/default/poc-secrets/openai-api-key/token

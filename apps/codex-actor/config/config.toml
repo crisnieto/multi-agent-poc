@@ -1,0 +1,10 @@
+model_provider = "poc_openai"
+model = "gpt-6-luna"
+model_reasoning_effort = "none"
+
+[model_providers.poc_openai]
+name = "OpenAI Platform PoC"
+base_url = "https://api.openai.com/v1"
+wire_api = "responses"
+env_key = "OPENAI_API_KEY"
+requires_openai_auth = false

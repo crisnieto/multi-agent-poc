@@ -1,0 +1,38 @@
+metadata:
+  atespace: ate-demo-counter
+  name: codex-poc
+workerSelector:
+  matchLabels:
+    workload: codex-poc
+containers:
+- name: codex-actor
+  image: __ACTOR_IMAGE__
+  env:
+  - name: OPENAI_API_KEY
+    value: substrate-placeholder
+  - name: SSL_CERT_FILE
+    value: /run/ate/egress-trust-bundle/trust-bundle.pem
+  - name: NODE_EXTRA_CA_CERTS
+    value: /run/ate/egress-trust-bundle/trust-bundle.pem
+  volumeMounts:
+  - name: egress-trust
+    mountPath: /run/ate/egress-trust-bundle
+  wakeupProbe:
+    httpGet:
+      path: /healthz
+      port: 8090
+volumes:
+- name: egress-trust
+  systemInfo:
+    dataSources:
+    - trustBundle:
+        names:
+        - egress-mitm.ate.dev
+        - system-roots.ate.dev
+        path: trust-bundle.pem
+resources:
+  limits:
+    cpuMillicores: 1000
+    memoryBytes: 536870912
+snapshotConfig:
+  preferredFidelity: SNAPSHOT_FIDELITY_MEMORY

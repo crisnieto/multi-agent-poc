@@ -2,6 +2,14 @@
 
 Fecha: 2026-10-31. Estas decisiones se basan en documentación; la instalación completa en EKS aún requiere una prueba real.
 
+## R0. Gate local obligatorio antes de AWS
+
+**Decisión**: iniciar y verificar por separado frontend, API, actor Codex y Substrate en un clúster local kind; luego probar los cuatro integrados con Substrate real. La [guía de desarrollo oficial de Substrate](https://github.com/agent-substrate/substrate#quickstart-development) incluye creación de clúster kind, instalación del sistema, actor de ejemplo y limpieza. Se fijará un commit y se usarán sus comandos/overlays correspondientes, pues la interfaz del proyecto cambia.
+
+**Fundamento**: separa errores de cada componente de los problemas específicos de EKS y evita cargos AWS durante el ciclo inicial. El frontend y la API pueden arrancar con adaptadores simulados; el actor debe demostrar un turno real acotado con Codex y OpenAI, y Substrate debe demostrar al menos el actor de ejemplo. La prueba integrada no usa mocks para Substrate.
+
+**Alternativas**: ejecutar solo pruebas con mocks no valida la multiplexación; empezar directamente en EKS expone el presupuesto a fallas de desarrollo. La ejecución local en macOS depende de la VM Linux de Docker y recursos suficientes; el gate debe informar limitaciones de host sin considerarlas fallas de EKS.
+
 ## R1. Compatibilidad de Substrate con EKS
 
 **Decisión**: usar EKS con Kubernetes 1.37 en soporte estándar y ejecutar un gate de compatibilidad antes de instalar el resto. El gate verifica mediante API discovery `PodCertificateRequest` y `ClusterTrustBundle`, monta un volumen `podCertificate`, instala el plano de Substrate y comprueba que sus componentes estén listos.
@@ -52,8 +60,8 @@ Fecha: 2026-10-31. Estas decisiones se basan en documentación; la instalación 
 
 ## Gates que deben medirse antes de la implementación completa
 
-1. EKS 1.37 en la región seleccionada; API discovery y montaje de certificados de pod.
-2. Substrate fijado a un tag o commit inmutable; instalación, salud, S3 e IAM.
-3. Actor de prueba: crear, reanudar, suspender, guardar en S3 y reanudar en otro worker.
-4. Codex app-server: respuesta incremental por router, contexto tras snapshot, MCP y credencial inyectada fuera del actor.
-5. Estimación regional completa menor que presupuesto disponible para la ventana; temporizador y limpieza probados.
+1. Arranque y smoke test local individual de frontend, API, actor Codex y Substrate; registrar cuatro resultados.
+2. Integración local con Substrate real: sesión, turno incremental, asignación observada, suspensión y reanudación.
+3. Antes de AWS: estimación regional menor que saldo disponible, temporizador y ruta de destrucción/auditoría listos.
+4. EKS 1.37 en la región seleccionada; API discovery y montaje de certificados de pod; instalación, salud, S3 e IAM.
+5. En EKS: actor de prueba y actor Codex con streaming, contexto tras snapshot, MCP y credencial inyectada fuera del actor.
