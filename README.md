@@ -5,7 +5,7 @@ Monorepo de una PoC con cuatro componentes: interfaz de chat y topología (`apps
 ## Estado
 
 - **Local:** los cuatro componentes y la integración real con Substrate pasaron sus pruebas. La [guía de prueba](specs/001-substrate-agents-poc/quickstart.md) explica cómo arrancar la demo y apagarla. La [evidencia local](infra/reports/local-integration.md) incluye sesiones, suspensión, reanudación y multiplexación.
-- **AWS:** el primer `terraform apply` creó EKS, pero la instalación de Substrate se detuvo por una validación GCS incompatible con S3. El overlay ya corrige esa validación y el despliegue no se ha reintentado. La [evidencia del intento](infra/reports/eks-attempt-2026-11-02.md) registra el cierre. La aplicación en EKS aún no se ha validado. El acceso por DNS público asignado por AWS es opcional, HTTP y está desactivado por defecto.
+- **AWS:** la PoC fue desplegada y probada en EKS con chat real, SSE, dos workers y DNS público HTTP temporal. La [arquitectura completa](specs/001-substrate-agents-poc/architecture.md) muestra los componentes y los flujos de sesión, respuesta, suspensión y reanudación. El entorno se destruye al finalizar la ventana de prueba.
 
 ## Presupuesto y seguridad
 
