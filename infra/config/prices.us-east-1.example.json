@@ -4,6 +4,7 @@
   "hours": 2,
   "node_count": 1,
   "public_ipv4_count": 1,
+  "public_access_enabled": false,
   "budget_usd": 80,
   "reserve_fraction": 0.2,
   "prior_aws_usd": 0,
@@ -12,6 +13,8 @@
     "eks_cluster_hour": 0.1,
     "ec2_node_hour": 0.1504,
     "public_ipv4_hour": 0.005,
+    "nlb_hour": 0.0225,
+    "nlcu_hour": 0.006,
     "ebs_gib_month": 0.08,
     "s3_gib_month": 0.023,
     "s3_requests_per_1000": 0.005,
@@ -26,6 +29,8 @@
     "eks_cluster_hour": "https://aws.amazon.com/eks/pricing/",
     "ec2_node_hour": "https://aws.amazon.com/ec2/instance-types/t3/",
     "public_ipv4_hour": "https://aws.amazon.com/vpc/pricing/",
+    "nlb_hour": "https://aws.amazon.com/elasticloadbalancing/pricing/",
+    "nlcu_hour": "https://aws.amazon.com/elasticloadbalancing/pricing/",
     "ebs_gib_month": "https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-storage-compare-volume-types.html",
     "s3_gib_month": "https://aws.amazon.com/s3/pricing/",
     "s3_requests_per_1000": "https://aws.amazon.com/s3/pricing/",
@@ -46,6 +51,7 @@
     "internet_transfer_gib": 10,
     "openai_input_tokens": 1000000,
     "openai_output_tokens": 500000,
-    "misc_buffer_usd": 10
+    "misc_buffer_usd": 10,
+    "nlcu_per_hour": 5
   }
 }

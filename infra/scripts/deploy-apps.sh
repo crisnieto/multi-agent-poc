@@ -66,10 +66,15 @@ else
   sed "s|__ACTOR_IMAGE__|$actor_image|" "$root/infra/local/actor-template.yaml" | kubectl ate create actor-template -f -
 fi
 
-POC_WEB_IMAGE="$web_image" POC_CONTROL_IMAGE="$control_image" node - "$root/infra/k8s/apps/apps.yaml.tpl" <<'NODE' | kubectl apply -f -
+public_access="$(terraform -chdir="$root/infra/terraform" output -raw public_access_enabled)"
+[[ "$public_access" == true || "$public_access" == false ]] || { printf 'Salida public_access_enabled inválida\n' >&2; exit 1; }
+POC_WEB_IMAGE="$web_image" POC_CONTROL_IMAGE="$control_image" POC_PUBLIC_ACCESS="$public_access" node - "$root/infra/k8s/apps/apps.yaml.tpl" <<'NODE' | kubectl apply -f -
 const fs=require('fs');let s=fs.readFileSync(process.argv[2],'utf8');
-for(const [name,value] of [['__WEB_IMAGE__',process.env.POC_WEB_IMAGE],['__CONTROL_PLANE_IMAGE__',process.env.POC_CONTROL_IMAGE]]){
-  if(s.split(name).length!==2||!value)process.exit(1);
+const publicAccess=process.env.POC_PUBLIC_ACCESS==='true';
+for(const [name,value] of [['__WEB_IMAGE__',process.env.POC_WEB_IMAGE],['__CONTROL_PLANE_IMAGE__',process.env.POC_CONTROL_IMAGE],
+  ['__WEB_SERVICE_TYPE__',publicAccess?'NodePort':'ClusterIP'],
+  ['__WEB_NODE_PORT_LINE__',publicAccess?'    nodePort: 30080':'']]){
+  if(s.split(name).length!==2||value===undefined)process.exit(1);
   s=s.replace(name,value);
 }
 process.stdout.write(s);
@@ -77,3 +82,6 @@ NODE
 kubectl -n ate-system rollout status deployment/poc-control-plane --timeout=10m
 kubectl -n ate-system rollout status deployment/poc-web --timeout=5m
 printf 'Aplicaciones privadas listas. Acceso: aws eks update-kubeconfig --name %s --region %s && kubectl -n ate-system port-forward svc/poc-web 8080:8080\n' "$cluster" "$region"
+if [[ "$public_access" == true ]]; then
+  printf 'Acceso público TLS: %s\n' "$(terraform -chdir="$root/infra/terraform" output -raw public_web_url)"
+fi

@@ -50,3 +50,47 @@ for name in ('atelet.yaml', 'ate-api-server.yaml'):
     path.write_text(content)
 print('Overlay EKS preparado en infra/.cache/substrate-eks (ignorado por Git)')
 PY
+
+# El instalador upstream exige una cuenta de transferencia GCS para cualquier
+# clúster que no sea kind, aun cuando snapshot-location selecciona S3.
+POC_EKS_WORKTREE="$eks_dir" python3 - <<'PY'
+from pathlib import Path
+import os
+
+path = Path(os.environ['POC_EKS_WORKTREE']) / 'cmd/ate-setup/internal/config/config.go'
+content = path.read_text()
+old = '''// ate-setup installs GCS everywhere but kind, which uses S3.
+func (c *Config) RequireTransferServiceAccount() error {
+\tif c.Kind {
+\t\treturn nil
+\t}'''
+new = '''// An S3 snapshot location does not need a GCS transfer service account.
+func (c *Config) RequireTransferServiceAccount() error {
+\tif c.Kind || strings.HasPrefix(c.SnapshotLocation, "s3://") {
+\t\treturn nil
+\t}'''
+if content.count(old) == 1:
+    path.write_text(content.replace(old, new, 1))
+elif content.count(new) != 1:
+    raise SystemExit('config.go: validación de GCS inesperada; revisar upstream')
+
+test = Path(os.environ['POC_EKS_WORKTREE']) / 'cmd/ate-setup/internal/config/poc_s3_overlay_test.go'
+test.write_text('''package config
+
+import "testing"
+
+func TestPoCS3DoesNotRequireGCSAccount(t *testing.T) {
+    c := &Config{SnapshotLocation: "s3://poc-snapshots/"}
+    if err := c.RequireTransferServiceAccount(); err != nil {
+        t.Fatalf("S3 must not require a GCS account: %v", err)
+    }
+}
+
+func TestPoCGCSStillRequiresTransferAccount(t *testing.T) {
+    c := &Config{SnapshotLocation: "gs://poc-snapshots/"}
+    if err := c.RequireTransferServiceAccount(); err == nil {
+        t.Fatal("GCS must require a transfer account")
+    }
+}
+''')
+PY

@@ -11,8 +11,17 @@ Object.assign(input.rates, {
 });
 const now = new Date('2026-11-02T12:00:00Z');
 const short = estimate(input, now);
-assert(short.approved, 'Una ventana de 48 horas debe caber en la reserva');
+assert(short.approved, 'Una ventana de 2 horas debe caber en la reserva');
 assert(short.projected_usd < 64);
+
+const publicInput = structuredClone(input);
+publicInput.public_access_enabled = true;
+publicInput.public_ipv4_count = 3;
+const publicEstimate = estimate(publicInput, now);
+assert(publicEstimate.window_usd > short.window_usd, 'DNS público debe sumar NLB, NLCU e IPv4');
+const undercounted = structuredClone(publicInput);
+undercounted.public_ipv4_count = 1;
+assert.throws(() => estimate(undercounted, now), /IPv4 no coinciden/);
 
 const continuous = structuredClone(input);
 continuous.hours = 730;

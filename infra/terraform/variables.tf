@@ -75,3 +75,19 @@ variable "window_hours" {
     error_message = "Esta PoC limita la ventana AWS a 2 horas."
   }
 }
+
+variable "public_access_enabled" {
+  type        = bool
+  default     = false
+  description = "Crea NLB HTTP con DNS público asignado por AWS; desactivado por defecto."
+}
+
+variable "public_web_cidrs" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "CIDR IPv4 que puede abrir la web pública. Por defecto cualquier visitante con la contraseña temporal."
+  validation {
+    condition     = length(var.public_web_cidrs) > 0 && alltrue([for cidr in var.public_web_cidrs : can(cidrnetmask(cidr))])
+    error_message = "public_web_cidrs debe contener CIDR IPv4 válidos."
+  }
+}

@@ -5,3 +5,6 @@ window_hours        = 2
 node_instance_type  = "t3a.xlarge"
 node_count          = 1
 worker_replicas     = 2
+# Opcional: usa el DNS público asignado por AWS al NLB (HTTP).
+# public_access_enabled = true
+# public_web_cidrs      = ["0.0.0.0/0"] # Compartible; restringir si se conocen las IP de invitados.

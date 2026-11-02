@@ -23,7 +23,7 @@ residual=0
 check_count 'Estado Terraform' "$state_count"
 check_count 'EKS' "$(aws eks list-clusters --region "$region" --query "length(clusters[?@=='$project'])" --output text)"
 check_count 'VPC' "$(aws ec2 describe-vpcs --region "$region" --filters "Name=tag:Project,Values=$project" --query 'length(Vpcs)' --output text)"
-check_count 'Instancias EC2' "$(aws ec2 describe-instances --region "$region" --filters "Name=tag:Project,Values=$project" --query 'length(Reservations[].Instances[])' --output text)"
+check_count 'Instancias EC2 activas' "$(aws ec2 describe-instances --region "$region" --filters "Name=tag:Project,Values=$project" "Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down" --query 'length(Reservations[].Instances[])' --output text)"
 check_count 'Volúmenes EBS' "$(aws ec2 describe-volumes --region "$region" --filters "Name=tag:Project,Values=$project" --query 'length(Volumes)' --output text)"
 check_count 'NAT gateways' "$(aws ec2 describe-nat-gateways --region "$region" --filter "Name=tag:Project,Values=$project" --query 'length(NatGateways)' --output text)"
 check_count 'IPv4 elásticas' "$(aws ec2 describe-addresses --region "$region" --filters "Name=tag:Project,Values=$project" --query 'length(Addresses)' --output text)"

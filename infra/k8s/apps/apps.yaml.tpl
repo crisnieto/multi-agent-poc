@@ -107,6 +107,8 @@ spec:
             secretKeyRef:
               name: poc-operator-login
               key: password
+        - name: POC_COOKIE_SECURE
+          value: "false"
         - name: POC_ATESPACE
           value: ate-demo-counter
         - name: POC_ACTOR_TEMPLATE
@@ -198,10 +200,11 @@ metadata:
   name: poc-web
   namespace: ate-system
 spec:
-  type: ClusterIP
+  type: __WEB_SERVICE_TYPE__
   selector:
     app: poc-web
   ports:
   - name: http
     port: 8080
     targetPort: http
+__WEB_NODE_PORT_LINE__

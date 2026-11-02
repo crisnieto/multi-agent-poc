@@ -34,6 +34,7 @@ terraform -chdir="$tf_dir" show -json "$plan" |
     const p=JSON.parse(s),v=p.variables||{},rates=JSON.parse(require("fs").readFileSync(process.env.POC_PRICE_FILE));
     const value=k=>v[k]?.value;
     if(value("aws_region")!==rates.region||value("node_count")!==rates.node_count||value("window_hours")!==rates.hours||
+       value("public_access_enabled")!==rates.public_access_enabled||
        value("worker_replicas")!==2||rates.hours!==2){
       console.error("Plan Terraform y estimación no coinciden o la ventana supera 2 horas");process.exit(1)
     }

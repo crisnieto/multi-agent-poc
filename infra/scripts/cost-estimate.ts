@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 const rateKeys = [
-  'eks_cluster_hour', 'ec2_node_hour', 'public_ipv4_hour', 'ebs_gib_month',
+  'eks_cluster_hour', 'ec2_node_hour', 'public_ipv4_hour', 'nlb_hour', 'nlcu_hour', 'ebs_gib_month',
   's3_gib_month', 's3_requests_per_1000', 'ecr_gib_month',
   'cloudwatch_ingest_gib', 'cloudwatch_storage_gib_month', 'internet_transfer_gib',
   'openai_input_million', 'openai_output_million',
@@ -16,6 +16,7 @@ export type CostInput = {
   hours: number;
   node_count: number;
   public_ipv4_count: number;
+  public_access_enabled: boolean;
   budget_usd: number;
   reserve_fraction: number;
   prior_aws_usd: number;
@@ -26,7 +27,7 @@ export type CostInput = {
     ebs_gib: number; s3_gib: number; s3_requests: number; ecr_gib: number;
     cloudwatch_ingest_gib: number; cloudwatch_storage_gib: number;
     internet_transfer_gib: number; openai_input_tokens: number; openai_output_tokens: number;
-    misc_buffer_usd: number;
+    misc_buffer_usd: number; nlcu_per_hour: number;
   };
 };
 
@@ -47,6 +48,9 @@ export function estimate(input: CostInput, now = new Date()) {
   if (!Number.isInteger(nodes) || nodes < 1) throw new Error('Se necesita al menos un nodo entero');
   const ips = nonnegative(input.public_ipv4_count, 'public_ipv4_count');
   if (!Number.isInteger(ips)) throw new Error('public_ipv4_count debe ser entero');
+  if (typeof input.public_access_enabled !== 'boolean' || ips !== (input.public_access_enabled ? 3 : 1)) {
+    throw new Error('Acceso público y cantidad de IPv4 no coinciden');
+  }
   const budget = nonnegative(input.budget_usd, 'budget_usd');
   if (budget <= 0 || budget > 80) throw new Error('El presupuesto de esta PoC no puede superar USD 80');
   const reserve = nonnegative(input.reserve_fraction, 'reserve_fraction');
@@ -62,12 +66,13 @@ export function estimate(input: CostInput, now = new Date()) {
   const requiredUsage = [
     'ebs_gib', 's3_gib', 's3_requests', 'ecr_gib', 'cloudwatch_ingest_gib',
     'cloudwatch_storage_gib', 'internet_transfer_gib', 'openai_input_tokens',
-    'openai_output_tokens', 'misc_buffer_usd',
+    'openai_output_tokens', 'misc_buffer_usd', 'nlcu_per_hour',
   ];
   for (const key of requiredUsage) nonnegative(usage?.[key as keyof typeof usage], `usage.${key}`);
   const r = input.rates;
   const monthFraction = hours / 730;
-  const hourly = hours * (r.eks_cluster_hour + nodes * r.ec2_node_hour + ips * r.public_ipv4_hour);
+  const hourly = hours * (r.eks_cluster_hour + nodes * r.ec2_node_hour + ips * r.public_ipv4_hour +
+    (input.public_access_enabled ? r.nlb_hour + usage.nlcu_per_hour * r.nlcu_hour : 0));
   const storage = monthFraction * (usage.ebs_gib * r.ebs_gib_month + usage.s3_gib * r.s3_gib_month +
     usage.ecr_gib * r.ecr_gib_month + usage.cloudwatch_storage_gib * r.cloudwatch_storage_gib_month);
   const variable = usage.s3_requests / 1000 * r.s3_requests_per_1000 +
