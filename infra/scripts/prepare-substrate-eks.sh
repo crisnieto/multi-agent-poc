@@ -48,6 +48,15 @@ for name in ('atelet.yaml', 'ate-api-server.yaml'):
             elif content.count(after) != 1:
                 raise SystemExit(f'atelet.yaml: ruta de credenciales inesperada: {before}')
     path.write_text(content)
+
+# PodMonitoring es exclusivo de Google Managed Prometheus y EKS no trae su CRD.
+base = root / 'base' / 'kustomization.yaml'
+content = base.read_text()
+gke_monitor = '  - ../atenet-router-monitoring.yaml\n'
+if content.count(gke_monitor) == 1:
+    base.write_text(content.replace(gke_monitor, '', 1))
+elif 'atenet-router-monitoring.yaml' in content:
+    raise SystemExit('base/kustomization.yaml: referencia PodMonitoring inesperada')
 print('Overlay EKS preparado en infra/.cache/substrate-eks (ignorado por Git)')
 PY
 
