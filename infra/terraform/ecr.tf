@@ -1,5 +1,12 @@
 resource "aws_ecr_repository" "app" {
-  for_each             = toset(["web", "control-plane", "codex-actor"])
+  # ko --base-import-paths publica una imagen por comando. El instalador de
+  # Substrate también construye envoy-dataplane con Docker.
+  for_each = toset([
+    "web", "control-plane", "codex-actor",
+    "ate-idp-server", "ateapi", "atecontroller", "atelet", "atenet",
+    "ateworker-gvisor", "kubernetes-secrets", "objectstore-plugin",
+    "podcertcontroller", "envoy-dataplane",
+  ])
   name                 = "${var.project_name}/${each.key}"
   image_tag_mutability = "IMMUTABLE"
   force_delete         = true

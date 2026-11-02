@@ -1,6 +1,6 @@
 # Guía de despliegue y prueba
 
-`infra/local` ya permite verificar los cuatro componentes por separado y la integración local con Substrate real. La evidencia está en `infra/reports/local-components.md` y `infra/reports/local-integration.md`; ambos gates locales pasaron. Terraform ya declara la red, EKS, EBS CSI, ECR, S3 e IAM y pasa `terraform validate`; el instalador Substrate y los manifiestos de aplicaciones para EKS siguen pendientes. No se ha ejecutado `terraform apply`. El commit de Substrate está fijado en `infra/substrate.lock`.
+`infra/local` ya permite verificar los cuatro componentes por separado y la integración local con Substrate real. La evidencia está en `infra/reports/local-components.md` y `infra/reports/local-integration.md`; ambos gates locales pasaron. Terraform ya declara la red, EKS, EBS CSI, ECR, S3 e IAM y pasa `terraform validate`. `prepare-substrate-eks.sh` genera un worktree con S3 y rutas ECR de AL2023, e `install-substrate.sh` prepara la instalación desde ese worktree, todavía sin una prueba EKS. Faltan los manifiestos de aplicaciones, el pool EKS y los gates de egreso. No se ha ejecutado `terraform apply`. El commit de Substrate está fijado en `infra/substrate.lock`.
 
 ## Comandos locales ya implementados
 

@@ -5,7 +5,7 @@ Monorepo de una PoC con cuatro componentes: interfaz de chat y topología (`apps
 ## Estado
 
 - **Local:** los cuatro componentes y la integración real con Substrate pasaron sus pruebas. La [guía de prueba](specs/001-substrate-agents-poc/quickstart.md) explica cómo arrancar la demo y apagarla. La [evidencia local](infra/reports/local-integration.md) incluye sesiones, suspensión, reanudación y multiplexación.
-- **AWS:** Terraform declara EKS, red, S3, ECR, IAM y alertas, pero aún faltan el overlay de Substrate para S3, imágenes y manifiestos de las aplicaciones, y el flujo de instalación verificado. El [primer intento y sus bloqueos](infra/reports/aws-attempt-2026-11-02.md) quedaron registrados. **No se ha ejecutado `terraform apply` ni se ha validado la PoC en EKS.**
+- **AWS:** Terraform declara EKS, red, S3, ECR, IAM y alertas. Hay un overlay S3/AL2023 y un script de instalación preparados, todavía sin prueba real; faltan las imágenes y manifiestos de las aplicaciones y el flujo completo de despliegue. El [primer intento y sus bloqueos](infra/reports/aws-attempt-2026-11-02.md) quedaron registrados. **No se ha ejecutado `terraform apply` ni se ha validado la PoC en EKS.**
 
 ## Presupuesto y seguridad
 
