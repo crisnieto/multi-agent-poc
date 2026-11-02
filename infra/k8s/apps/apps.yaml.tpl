@@ -15,7 +15,7 @@ rules:
   verbs: ["get", "list"]
 - apiGroups: [""]
   resources: ["pods/portforward"]
-  verbs: ["create"]
+  verbs: ["get", "create"]
 - apiGroups: [""]
   resources: ["serviceaccounts/token"]
   resourceNames: ["ate-client"]

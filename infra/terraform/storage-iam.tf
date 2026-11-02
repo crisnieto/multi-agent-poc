@@ -66,6 +66,29 @@ resource "aws_iam_role_policy" "objectstore" {
   policy   = data.aws_iam_policy_document.objectstore.json
 }
 
+# atelet pulls actor OCI bundles directly, outside the kubelet image pull path.
+# Its Pod Identity role therefore needs its own ECR read permissions.
+data "aws_iam_policy_document" "atelet_ecr" {
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchCheckLayerAvailability",
+    ]
+    resources = [aws_ecr_repository.app["codex-actor"].arn]
+  }
+}
+
+resource "aws_iam_role_policy" "atelet_ecr" {
+  name   = "${var.project_name}-atelet-ecr"
+  role   = aws_iam_role.objectstore["atelet"].id
+  policy = data.aws_iam_policy_document.atelet_ecr.json
+}
+
 resource "aws_eks_pod_identity_association" "objectstore" {
   for_each        = aws_iam_role.objectstore
   cluster_name    = aws_eks_cluster.poc.name

@@ -35,6 +35,10 @@ if (( state_count > 0 )) && command -v kubectl >/dev/null; then
     kubeconfig="$(mktemp)"
     trap 'rm -f "$kubeconfig"' EXIT
     aws eks update-kubeconfig --name "$project" --region "$POC_AWS_REGION" --kubeconfig "$kubeconfig" >/dev/null
+    # PVC protection keeps claims in Terminating while their pods are mounted.
+    # Release both mounts before deleting the volumes and the cluster.
+    KUBECONFIG="$kubeconfig" kubectl -n ate-system scale deployment/poc-control-plane --replicas=0 --timeout=120s 2>/dev/null || true
+    KUBECONFIG="$kubeconfig" kubectl -n ate-system scale statefulset/postgres --replicas=0 --timeout=120s 2>/dev/null || true
     if ! KUBECONFIG="$kubeconfig" kubectl delete pvc --all -A --wait=true --timeout=180s; then
       printf 'No se borraron todos los PVC; Terraform continuará y la auditoría detectará EBS residuales\n' >&2
     fi
