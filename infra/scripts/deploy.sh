@@ -10,6 +10,9 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 [[ -n "${OPENAI_API_KEY:-}" && -n "${POC_OPERATOR_PASSWORD:-}" ]] || {
   printf 'Faltan las credenciales de ejecución en el entorno\n' >&2; exit 2;
 }
+# Conservarla solo en este shell; Terraform, builders y AWS CLI no la heredan.
+openai_api_key="$OPENAI_API_KEY"
+unset OPENAI_API_KEY
 POC_TFVARS="$(cd "$(dirname "$POC_TFVARS")" && pwd)/$(basename "$POC_TFVARS")"
 POC_PRICE_FILE="$(cd "$(dirname "$POC_PRICE_FILE")" && pwd)/$(basename "$POC_PRICE_FILE")"
 export POC_TFVARS POC_PRICE_FILE
@@ -64,6 +67,6 @@ applied=1
 terraform -chdir="$tf_dir" apply -input=false -auto-approve "$plan"
 "$root/infra/scripts/install-substrate.sh"
 "$root/infra/scripts/build-push.sh"
-"$root/infra/scripts/deploy-apps.sh"
+OPENAI_API_KEY="$openai_api_key" "$root/infra/scripts/deploy-apps.sh"
 trap - EXIT
 printf 'Ventana AWS activa. Ejecutar smoke-app.sh y luego destroy.sh antes del plazo de 2 horas.\n'

@@ -7,6 +7,9 @@ region="${POC_AWS_REGION:-}"
 [[ -n "${OPENAI_API_KEY:-}" && -n "${POC_OPERATOR_PASSWORD:-}" ]] || {
   printf 'Faltan OPENAI_API_KEY o POC_OPERATOR_PASSWORD en el entorno; nunca ponerlos en archivos versionados\n' >&2; exit 2;
 }
+# Ningún subproceso de AWS, Terraform o kubectl hereda la variable.
+openai_api_key="$OPENAI_API_KEY"
+unset OPENAI_API_KEY
 for binary in aws terraform kubectl node; do command -v "$binary" >/dev/null || { printf 'Falta %s\n' "$binary" >&2; exit 2; }; done
 [[ -x "$root/infra/.cache/kubectl-ate" && -f "$root/infra/.runtime/aws/images.json" ]] || {
   printf 'Faltan kubectl-ate local o digests de imágenes; ejecutar install-substrate.sh y build-push.sh\n' >&2; exit 2;
@@ -27,7 +30,7 @@ fi
 
 # Las credenciales pasan por stdin a Secrets. Ni la imagen, ni los manifiestos
 # versionados, ni Terraform contienen sus valores.
-printf '%s' "$OPENAI_API_KEY" |
+printf '%s' "$openai_api_key" |
   kubectl -n poc-secrets create secret generic openai-api-key --from-file=token=/dev/stdin --dry-run=client -o yaml |
   kubectl apply -f - >/dev/null
 printf '%s' "$POC_OPERATOR_PASSWORD" |
@@ -83,5 +86,5 @@ kubectl -n ate-system rollout status deployment/poc-control-plane --timeout=10m
 kubectl -n ate-system rollout status deployment/poc-web --timeout=5m
 printf 'Aplicaciones privadas listas. Acceso: aws eks update-kubeconfig --name %s --region %s && kubectl -n ate-system port-forward svc/poc-web 8080:8080\n' "$cluster" "$region"
 if [[ "$public_access" == true ]]; then
-  printf 'Acceso público TLS: %s\n' "$(terraform -chdir="$root/infra/terraform" output -raw public_web_url)"
+  printf 'Acceso público HTTP: %s\n' "$(terraform -chdir="$root/infra/terraform" output -raw public_web_url)"
 fi
