@@ -44,6 +44,12 @@ try {
   assert.equal(accepted.status, 202);
   const request = await accepted.json() as { id: string; status: string };
   assert.equal(request.status, 'completed');
+  const history = await fetch(`${base}/sessions/${session.id}/messages`, { headers: { cookie } });
+  assert.equal(history.status, 200);
+  const turns = await history.json() as { id: string; text: string; status: string; final_text: string }[];
+  assert.deepEqual(turns.map(({ id, text, status }) => ({ id, text, status })),
+    [{ id: request.id, text: 'hola', status: 'completed' }]);
+  assert.equal(typeof turns[0]?.final_text, 'string');
   const all = await fetch(`${base}/requests/${request.id}/events`, { headers: { cookie } });
   assert.equal(all.status, 200);
   const frames = await all.text();
@@ -62,6 +68,7 @@ try {
   assert.equal((await status.json() as { status: string }).status, 'completed');
   const closed = await fetch(`${base}/sessions/${session.id}`, { method: 'DELETE', headers: { cookie } });
   assert.equal(closed.status, 204);
+  assert.equal((await fetch(`${base}/sessions/${session.id}/messages`, { headers: { cookie } })).status, 404);
   console.log('Contrato chat PASS: auth, sesión, validación, turno, SSE, replay y terminal único');
 } finally {
   server.kill('SIGTERM');

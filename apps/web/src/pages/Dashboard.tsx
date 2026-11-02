@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { createSession, deleteSession, getTopology, listSessions, login, sendTurn,
+import { createSession, deleteSession, getSessionMessages, getTopology, listSessions, login, sendTurn,
   type Session, type Topology } from '../api/client';
 import { TopologyPanel } from '../components/TopologyPanel';
 import { Timeline, type TimelineEntry } from '../components/Timeline';
@@ -48,6 +48,29 @@ export function Dashboard() {
     const timer = setInterval(() => void refresh(), 2000);
     return () => { cancelled = true; clearInterval(timer); };
   }, [loggedIn]);
+
+  useEffect(() => {
+    if (!loggedIn || !selected || busy === selected) return;
+    const sessionId = selected;
+    let cancelled = false;
+    const refreshMessages = async () => {
+      try {
+        const turns = await getSessionMessages(sessionId);
+        if (cancelled) return;
+        const restored: Message[] = turns.flatMap((turn) => [
+          { role: 'user' as const, text: turn.text },
+          { role: 'agent' as const, text: turn.final_text ?? '',
+            ...(turn.status === 'completed' ? {} : { status: turn.status === 'failed'
+              ? `Error: ${turn.error_code ?? 'codex_turn_failed'}`
+              : turn.status === 'running' ? 'Trabajando' : 'Esperando' }) },
+        ]);
+        setMessages((old) => ({ ...old, [sessionId]: restored }));
+      } catch (cause) { if (!cancelled) setError(String(cause)); }
+    };
+    void refreshMessages();
+    const timer = setInterval(() => void refreshMessages(), 2000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [loggedIn, selected, busy]);
 
   async function signIn(event: FormEvent) {
     event.preventDefault();

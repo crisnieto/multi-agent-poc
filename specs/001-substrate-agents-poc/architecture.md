@@ -248,7 +248,7 @@ El cambio de worker pod fue probado localmente. El despliegue AWS actual tiene *
 
 ## 7. Observar workers y cerrar una sesión
 
-La interfaz consulta `/api/sessions` y `/api/topology` **cada 2 segundos**. La API obtiene actores y workers reales de Substrate y calcula los rótulos `idle`, `busy` o `unavailable`. Existe `/api/topology/events` por SSE, pero el frontend desplegado usa polling. La línea de tiempo de la UI compara observaciones consecutivas; no es un registro completo de todas las transiciones del clúster.
+La interfaz consulta `/api/sessions` y `/api/topology` **cada 2 segundos**. Al seleccionar una sesión, consulta también `/api/sessions/{id}/messages` y reconstruye el chat desde SQLite, incluso en otro navegador; mientras no esté enviando su propio turno, actualiza ese historial cada 2 segundos. La API obtiene actores y workers reales de Substrate y calcula los rótulos `idle`, `busy` o `unavailable`. Existe `/api/topology/events` por SSE, pero el frontend desplegado usa polling. La línea de tiempo de la UI compara observaciones consecutivas; no es un registro completo de todas las transiciones del clúster.
 
 ```mermaid
 sequenceDiagram

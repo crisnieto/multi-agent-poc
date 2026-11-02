@@ -37,6 +37,12 @@ export function registerSessions(app: FastifyInstance, db: Database.Database): v
     const session = db.prepare('SELECT * FROM sessions WHERE id = ? AND status != ?').get(request.params.sessionId, 'closed');
     return session ? { ...(session as object), source: 'mock' } : reply.code(404).send({ error: 'not_found' });
   });
+  app.get<{ Params: { sessionId: string } }>('/api/sessions/:sessionId/messages', async (request, reply) => {
+    const session = db.prepare('SELECT id FROM sessions WHERE id = ? AND status != ?').get(request.params.sessionId, 'closed');
+    if (!session) return reply.code(404).send({ error: 'not_found' });
+    return db.prepare(`SELECT id, text, status, final_text, error_code, created_at
+      FROM requests WHERE session_id = ? ORDER BY created_at, rowid`).all(request.params.sessionId);
+  });
   app.delete<{ Params: { sessionId: string } }>('/api/sessions/:sessionId', async (request, reply) => {
     if (real) {
       try { return await closeSession(db, request.params.sessionId) ? reply.code(204).send() : reply.code(404).send({ error: 'not_found' }); }

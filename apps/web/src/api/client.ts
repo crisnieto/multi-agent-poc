@@ -1,5 +1,6 @@
 export type Session = { id: string; actor_id: string; title: string; status: string; source: string };
 export type ChatRequest = { id: string; session_id: string; status: string; final_text?: string | null; error_code?: string | null };
+export type SessionTurn = { id: string; text: string; status: string; final_text: string | null; error_code: string | null; created_at: string };
 export type Actor = { actor_id: string; session_id: string; state: string; worker_id?: string; observed_at: string; source: string };
 export type Worker = { worker_id: string; pod_name: string; state: string; actor_id?: string; observed_at: string; source: string };
 export type Topology = { observed_at: string; source: string; actors: Actor[]; workers: Worker[] };
@@ -17,6 +18,7 @@ export async function login(password: string): Promise<void> {
 }
 
 export const listSessions = () => json<Session[]>('/sessions');
+export const getSessionMessages = (id: string) => json<SessionTurn[]>(`/sessions/${encodeURIComponent(id)}/messages`);
 export const createSession = () => json<Session>('/sessions', { method: 'POST' });
 export const deleteSession = async (id: string) => {
   const response = await fetch(`/api/sessions/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'same-origin' });

@@ -84,6 +84,29 @@ paths:
               schema: { $ref: '#/components/schemas/ChatRequest' }
         '404': { description: Sesión inexistente }
         '409': { description: Ya existe un turno activo en la sesión }
+  /sessions/{sessionId}/messages:
+    parameters:
+      - $ref: '#/components/parameters/sessionId'
+    get:
+      summary: Reconstruir el historial de chat de una sesión
+      responses:
+        '200':
+          description: Turnos ordenados por creación, incluidos los que siguen en curso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, text, status, final_text, error_code, created_at]
+                  properties:
+                    id: { type: string, format: uuid }
+                    text: { type: string }
+                    status: { type: string }
+                    final_text: { type: [string, 'null'] }
+                    error_code: { type: [string, 'null'] }
+                    created_at: { type: string, format: date-time }
+        '404': { description: Sesión inexistente o cerrada }
   /requests/{requestId}:
     parameters:
       - $ref: '#/components/parameters/requestId'

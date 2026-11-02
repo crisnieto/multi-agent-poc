@@ -63,7 +63,7 @@ roleRef:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: poc-control-plane-data
+  name: poc-control-plane-data-v2
   namespace: ate-system
   labels:
     Project: substrate-poc
@@ -138,7 +138,7 @@ spec:
       volumes:
       - name: data
         persistentVolumeClaim:
-          claimName: poc-control-plane-data
+          claimName: poc-control-plane-data-v2
 ---
 apiVersion: v1
 kind: Service
