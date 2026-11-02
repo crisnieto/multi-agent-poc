@@ -57,6 +57,17 @@ if content.count(gke_monitor) == 1:
     base.write_text(content.replace(gke_monitor, '', 1))
 elif 'atenet-router-monitoring.yaml' in content:
     raise SystemExit('base/kustomization.yaml: referencia PodMonitoring inesperada')
+
+# El volumen upstream es de 500 GiB para producción; gp3 mantiene IOPS base
+# con 10 GiB, suficientes para los datos efímeros de esta PoC.
+postgres = root / 'postgres' / 'postgres.yaml'
+content = postgres.read_text()
+old = '          storage: 500Gi\n'
+new = '          storage: 10Gi\n'
+if content.count(old) == 1:
+    postgres.write_text(content.replace(old, new, 1))
+elif content.count(new) != 1:
+    raise SystemExit('postgres.yaml: tamaño de volumen inesperado')
 print('Overlay EKS preparado en infra/.cache/substrate-eks (ignorado por Git)')
 PY
 

@@ -51,10 +51,10 @@ variable "worker_replicas" {
 
 variable "allowed_api_cidrs" {
   type        = list(string)
-  description = "IPs públicas del operador autorizadas al endpoint EKS."
+  description = "CIDR con acceso de red al endpoint EKS; 0.0.0.0/0 permite hotspots con IP cambiante (Kubernetes aún exige IAM)."
   validation {
-    condition     = length(var.allowed_api_cidrs) > 0 && alltrue([for cidr in var.allowed_api_cidrs : can(cidrhost(cidr, 0)) && cidr != "0.0.0.0/0" && cidr != "::/0" && cidr != "203.0.113.1/32"])
-    error_message = "Indicar un CIDR real y restringido; se prohíbe el valor de ejemplo y 0.0.0.0/0."
+    condition     = length(var.allowed_api_cidrs) > 0 && alltrue([for cidr in var.allowed_api_cidrs : can(cidrnetmask(cidr)) && cidr != "203.0.113.1/32"])
+    error_message = "Indicar un CIDR IPv4 real o 0.0.0.0/0 para una IP cambiante; se prohíbe el valor de ejemplo."
   }
 }
 
