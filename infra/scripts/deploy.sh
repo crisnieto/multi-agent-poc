@@ -34,8 +34,8 @@ terraform -chdir="$tf_dir" show -json "$plan" |
     const p=JSON.parse(s),v=p.variables||{},rates=JSON.parse(require("fs").readFileSync(process.env.POC_PRICE_FILE));
     const value=k=>v[k]?.value;
     if(value("aws_region")!==rates.region||value("node_count")!==rates.node_count||value("window_hours")!==rates.hours||
-       value("worker_replicas")!==2||rates.hours!==6){
-      console.error("Plan Terraform y estimación no coinciden o la ventana supera 6 horas");process.exit(1)
+       value("worker_replicas")!==2||rates.hours!==2){
+      console.error("Plan Terraform y estimación no coinciden o la ventana supera 2 horas");process.exit(1)
     }
     if(!p.resource_changes?.some(x=>x.type==="aws_budgets_budget"&&x.change.actions.includes("create"))){
       console.error("El plan no crea el presupuesto AWS Budgets");process.exit(1)
@@ -43,8 +43,12 @@ terraform -chdir="$tf_dir" show -json "$plan" |
   })'
 
 applied=0
+timer_armed=0
 cleanup_on_error() {
   status=$?
+  if (( status != 0 && timer_armed == 1 )); then
+    "$root/infra/scripts/stop-timer.sh" disarm || true
+  fi
   if (( status != 0 && applied == 1 )); then
     printf 'Despliegue fallido; destruyendo la ventana AWS\n' >&2
     "$root/infra/scripts/destroy.sh" || printf 'La limpieza automática falló; ejecutar destroy.sh y auditar residuos de inmediato\n' >&2
@@ -52,11 +56,13 @@ cleanup_on_error() {
   exit "$status"
 }
 trap cleanup_on_error EXIT
+deadline="$(node -e 'console.log(new Date(Date.now()+2*3600000).toISOString())')"
+"$root/infra/scripts/stop-timer.sh" arm-until "$deadline"
+timer_armed=1
 applied=1
 terraform -chdir="$tf_dir" apply -input=false -auto-approve "$plan"
-"$root/infra/scripts/stop-timer.sh" arm 6
 "$root/infra/scripts/install-substrate.sh"
 "$root/infra/scripts/build-push.sh"
 "$root/infra/scripts/deploy-apps.sh"
 trap - EXIT
-printf 'Ventana AWS activa. Ejecutar smoke-app.sh y luego destroy.sh antes del plazo de 6 horas.\n'
+printf 'Ventana AWS activa. Ejecutar smoke-app.sh y luego destroy.sh antes del plazo de 2 horas.\n'

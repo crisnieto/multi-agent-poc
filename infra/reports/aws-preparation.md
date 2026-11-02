@@ -4,7 +4,7 @@
 
 ## Preparado
 
-- `infra/scripts/deploy.sh` exige `POC_DEPLOY_APPROVED=1`, gates locales aprobados, preflight EKS, cálculo de costo actual, plan con seis horas/un nodo/dos workers y presupuesto AWS Budgets. Ante fallo posterior al `apply`, intenta destrucción. El flag de activación no se ha usado.
+- `infra/scripts/deploy.sh` exige `POC_DEPLOY_APPROVED=1`, gates locales aprobados, preflight EKS, cálculo de costo actual, plan con un nodo/dos workers y presupuesto AWS Budgets. El 2 de noviembre el operador redujo el máximo a dos horas desde el comienzo del `apply`; `stop-timer.sh` arma ese plazo antes de crear recursos. Ante fallo posterior al `apply`, intenta destrucción.
 - `prepare-substrate-eks.sh` aplica S3 a ambos plugins de Substrate del commit fijado y rutas ECR de AL2023 a `atelet` en un worktree ignorado por Git. Kustomize renderizó ese worktree.
 - `install-substrate.sh` instala gVisor, snapshot `s3://<bucket>/`, PostgreSQL sobre EBS gp3, gateway y API; `check-pod-certificates.sh` exige API discovery y un montaje real de certificado antes de continuar.
 - `build-push.sh` compila `kubectl-ate` para Linux/amd64 y publica actor, API, web y worker en ECR por digest. `deploy-apps.sh` crea dos workers, plantilla Codex, Secrets por stdin, política de egreso y servicios privados. `smoke-app.sh` prueba un turno real y SSE cuando exista el clúster.
@@ -17,6 +17,7 @@
 - Docker construyó `poc-web:local` y `poc-control-plane:local` para `linux/amd64` con Rosetta local. La web sirvió `/` y la API respondió `/api/healthz` en modo simulado. Las imágenes locales miden aproximadamente 26 MB y 117 MB. No se hizo push.
 - Un `terraform plan` anterior, sin aplicar, mostró 57 recursos nuevos con IP del operador restringida y seis horas. Se guarda ignorado en `infra/.runtime/aws/`.
 - Con gasto OpenAI declarado de USD 0,03 y gasto AWS observado por Cost Explorer de USD 1,1488, el preflight estimó USD 14,4672 para seis horas y USD 15,6460 acumulados. Límite operativo con reserva del 20 %: USD 64. Las tarifas y el gasto deben refrescarse antes de cualquier `apply`.
+- Con el límite actualizado de dos horas, el preflight del 2 de noviembre estimó USD 13,3891 para la ventana y USD 14,5678 acumulados, incluido un colchón fijo de USD 10. Estas cifras siguen siendo estimaciones; el temporizador local no garantiza por sí solo un límite duro de facturación.
 
 ## Gates pendientes de la primera ventana
 

@@ -69,9 +69,9 @@ variable "budget_alert_emails" {
 
 variable "window_hours" {
   type    = number
-  default = 48
+  default = 2
   validation {
-    condition     = var.window_hours > 0 && var.window_hours <= 72
-    error_message = "Una ventana no puede superar 72 horas sin nueva aprobación financiera."
+    condition     = var.window_hours > 0 && var.window_hours <= 2
+    error_message = "Esta PoC limita la ventana AWS a 2 horas."
   }
 }
